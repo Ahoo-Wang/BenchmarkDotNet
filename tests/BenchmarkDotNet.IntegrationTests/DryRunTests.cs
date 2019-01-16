@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Threading;
 using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Attributes.Columns;
-using BenchmarkDotNet.Attributes.Jobs;
 using BenchmarkDotNet.Tests.Loggers;
 using Xunit;
 using Xunit.Abstractions;
@@ -16,7 +14,7 @@ namespace BenchmarkDotNet.IntegrationTests
         [Fact]
         public void WelchTTest() => CanExecute<WelchTTestBench>(CreateSimpleConfig());
 
-        [DryJob, WelchTTestPValueColumn]
+        [DryJob, StatisticalTestColumn]
         public class WelchTTestBench
         {
             [Benchmark(Baseline = true)]

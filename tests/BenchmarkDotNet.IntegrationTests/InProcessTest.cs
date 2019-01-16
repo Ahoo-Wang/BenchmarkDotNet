@@ -54,53 +54,35 @@ namespace BenchmarkDotNet.IntegrationTests
         [Fact]
         public void BenchmarkActionValueTaskOfTSupported() => TestInvoke(x => x.InvokeOnceValueTaskOfT(), UnrollFactor, DecimalResult);
 
-        [Fact]
-        public void BenchmarkActionStaticVoidSupported() => TestInvoke(x => BenchmarkAllCases.InvokeOnceStaticVoid(), UnrollFactor);
-
-        [Fact]
-        public void BenchmarkActionStaticTaskSupported() => TestInvoke(x => BenchmarkAllCases.InvokeOnceStaticTaskAsync(), UnrollFactor, null);
-
-        [Fact]
-        public void BenchmarkActionStaticRefTypeSupported() => TestInvoke(x => BenchmarkAllCases.InvokeOnceStaticRefType(), UnrollFactor, StringResult);
-
-        [Fact]
-        public void BenchmarkActionStaticValueTypeSupported() => TestInvoke(x => BenchmarkAllCases.InvokeOnceStaticValueType(), UnrollFactor, DecimalResult);
-
-        [Fact]
-        public void BenchmarkActionStaticTaskOfTSupported() => TestInvoke(x => BenchmarkAllCases.InvokeOnceStaticTaskOfTAsync(), UnrollFactor, StringResult);
-
-        [Fact]
-        public void BenchmarkActionStaticValueTaskOfTSupported() => TestInvoke(x => BenchmarkAllCases.InvokeOnceStaticValueTaskOfT(), UnrollFactor, DecimalResult);
-
         [AssertionMethod]
         private void TestInvoke(Expression<Action<BenchmarkAllCases>> methodCall, int unrollFactor)
         {
             var targetMethod = ((MethodCallExpression) methodCall.Body).Method;
-            var target = new Target(typeof(BenchmarkAllCases), targetMethod, targetMethod, targetMethod);
+            var descriptor = new Descriptor(typeof(BenchmarkAllCases), targetMethod, targetMethod, targetMethod);
 
             // Run mode
-            var action = BenchmarkActionFactory.CreateRun(target, new BenchmarkAllCases(), BenchmarkActionCodegen.ReflectionEmit, unrollFactor);
+            var action = BenchmarkActionFactory.CreateWorkload(descriptor, new BenchmarkAllCases(), BenchmarkActionCodegen.ReflectionEmit, unrollFactor);
             TestInvoke(action, unrollFactor, false, null);
-            action = BenchmarkActionFactory.CreateRun(target, new BenchmarkAllCases(), BenchmarkActionCodegen.DelegateCombine, unrollFactor);
+            action = BenchmarkActionFactory.CreateWorkload(descriptor, new BenchmarkAllCases(), BenchmarkActionCodegen.DelegateCombine, unrollFactor);
             TestInvoke(action, unrollFactor, false, null);
 
             // Idle mode
-            action = BenchmarkActionFactory.CreateIdle(target, new BenchmarkAllCases(), BenchmarkActionCodegen.ReflectionEmit, unrollFactor);
+            action = BenchmarkActionFactory.CreateOverhead(descriptor, new BenchmarkAllCases(), BenchmarkActionCodegen.ReflectionEmit, unrollFactor);
             TestInvoke(action, unrollFactor, true, null);
-            action = BenchmarkActionFactory.CreateIdle(target, new BenchmarkAllCases(), BenchmarkActionCodegen.DelegateCombine, unrollFactor);
+            action = BenchmarkActionFactory.CreateOverhead(descriptor, new BenchmarkAllCases(), BenchmarkActionCodegen.DelegateCombine, unrollFactor);
             TestInvoke(action, unrollFactor, true, null);
 
             // GlobalSetup/GlobalCleanup
-            action = BenchmarkActionFactory.CreateGlobalSetup(target, new BenchmarkAllCases());
+            action = BenchmarkActionFactory.CreateGlobalSetup(descriptor, new BenchmarkAllCases());
             TestInvoke(action, 1, false, null);
-            action = BenchmarkActionFactory.CreateGlobalCleanup(target, new BenchmarkAllCases());
+            action = BenchmarkActionFactory.CreateGlobalCleanup(descriptor, new BenchmarkAllCases());
             TestInvoke(action, 1, false, null);
 
             // GlobalSetup/GlobalCleanup (empty)
-            target = new Target(typeof(BenchmarkAllCases), targetMethod);
-            action = BenchmarkActionFactory.CreateGlobalSetup(target, new BenchmarkAllCases());
+            descriptor = new Descriptor(typeof(BenchmarkAllCases), targetMethod);
+            action = BenchmarkActionFactory.CreateGlobalSetup(descriptor, new BenchmarkAllCases());
             TestInvoke(action, unrollFactor, true, null);
-            action = BenchmarkActionFactory.CreateGlobalCleanup(target, new BenchmarkAllCases());
+            action = BenchmarkActionFactory.CreateGlobalCleanup(descriptor, new BenchmarkAllCases());
             TestInvoke(action, unrollFactor, true, null);
 
             // Dummy (just in case something may broke)
@@ -114,12 +96,12 @@ namespace BenchmarkDotNet.IntegrationTests
         private void TestInvoke<T>(Expression<Func<BenchmarkAllCases, T>> methodCall, int unrollFactor, object expectedResult)
         {
             var targetMethod = ((MethodCallExpression) methodCall.Body).Method;
-            var target = new Target(typeof(BenchmarkAllCases), targetMethod);
+            var descriptor = new Descriptor(typeof(BenchmarkAllCases), targetMethod);
 
             // Run mode
-            var action = BenchmarkActionFactory.CreateRun(target, new BenchmarkAllCases(), BenchmarkActionCodegen.ReflectionEmit, unrollFactor);
+            var action = BenchmarkActionFactory.CreateWorkload(descriptor, new BenchmarkAllCases(), BenchmarkActionCodegen.ReflectionEmit, unrollFactor);
             TestInvoke(action, unrollFactor, false, expectedResult);
-            action = BenchmarkActionFactory.CreateRun(target, new BenchmarkAllCases(), BenchmarkActionCodegen.DelegateCombine, unrollFactor);
+            action = BenchmarkActionFactory.CreateWorkload(descriptor, new BenchmarkAllCases(), BenchmarkActionCodegen.DelegateCombine, unrollFactor);
             TestInvoke(action, unrollFactor, false, expectedResult);
 
             // Idle mode
@@ -136,9 +118,9 @@ namespace BenchmarkDotNet.IntegrationTests
             else
                 idleExpected = GetDefault(expectedResult.GetType());
 
-            action = BenchmarkActionFactory.CreateIdle(target, new BenchmarkAllCases(), BenchmarkActionCodegen.ReflectionEmit, unrollFactor);
+            action = BenchmarkActionFactory.CreateOverhead(descriptor, new BenchmarkAllCases(), BenchmarkActionCodegen.ReflectionEmit, unrollFactor);
             TestInvoke(action, unrollFactor, true, idleExpected);
-            action = BenchmarkActionFactory.CreateIdle(target, new BenchmarkAllCases(), BenchmarkActionCodegen.DelegateCombine, unrollFactor);
+            action = BenchmarkActionFactory.CreateOverhead(descriptor, new BenchmarkAllCases(), BenchmarkActionCodegen.DelegateCombine, unrollFactor);
             TestInvoke(action, unrollFactor, true, idleExpected);
         }
 
@@ -296,48 +278,6 @@ namespace BenchmarkDotNet.IntegrationTests
 
             [Benchmark]
             public ValueTask<decimal> InvokeOnceValueTaskOfT()
-            {
-                Interlocked.Increment(ref Counter);
-                return new ValueTask<decimal>(DecimalResult);
-            }
-
-            [Benchmark]
-            public static void InvokeOnceStaticVoid()
-            {
-                Interlocked.Increment(ref Counter);
-            }
-
-            [Benchmark]
-            public static async Task InvokeOnceStaticTaskAsync()
-            {
-                await Task.Yield();
-                Interlocked.Increment(ref Counter);
-            }
-
-            [Benchmark]
-            public static string InvokeOnceStaticRefType()
-            {
-                Interlocked.Increment(ref Counter);
-                return StringResult;
-            }
-
-            [Benchmark]
-            public static decimal InvokeOnceStaticValueType()
-            {
-                Interlocked.Increment(ref Counter);
-                return DecimalResult;
-            }
-
-            [Benchmark]
-            public static async Task<string> InvokeOnceStaticTaskOfTAsync()
-            {
-                await Task.Yield();
-                Interlocked.Increment(ref Counter);
-                return StringResult;
-            }
-
-            [Benchmark]
-            public static ValueTask<decimal> InvokeOnceStaticValueTaskOfT()
             {
                 Interlocked.Increment(ref Counter);
                 return new ValueTask<decimal>(DecimalResult);

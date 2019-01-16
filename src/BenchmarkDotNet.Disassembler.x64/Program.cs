@@ -73,7 +73,7 @@ namespace BenchmarkDotNet.Disassembler
                 // we don't want to export the disassembler entry point method which is just an artificial method added to get generic types working
                 var methodsToExport = disasembledMethods.Where(method => 
                     disasembledMethods.Count == 1  // if there is only one method we want to return it (most probably benchmark got inlined)
-                    || !method.Name.Contains(DisassemblerConstants.DiassemblerEntryMethodName)).ToArray();
+                    || !method.Name.Contains(DisassemblerConstants.DisassemblerEntryMethodName)).ToArray();
 
                 using (var stream = new FileStream(settings.ResultsPath, FileMode.Append, FileAccess.Write))
                 using (var writer = XmlWriter.Create(stream))
@@ -287,7 +287,8 @@ namespace BenchmarkDotNet.Disassembler
                     TextRepresentation = disasmBuffer.ToString(),
                     Comment = calledMethodName,
                     StartAddress = disasmAddress,
-                    EndAddress = endOffset
+                    EndAddress = endOffset,
+                    SizeInBytes = (uint)(endOffset - disasmAddress)
                 };
 
                 if (endOffset >= map.EndAddress)
@@ -342,7 +343,7 @@ namespace BenchmarkDotNet.Disassembler
             var rightPart = textRepresentation
                 .Split(CallSeparator, StringSplitOptions.RemoveEmptyEntries).Last() // take the right part
                 .Trim() // remove leading whitespaces
-                .Replace("`", string.Empty); // remove the magic delimeter
+                .Replace("`", string.Empty); // remove the magic delimiter
 
             string addressPart = string.Empty;
             if (rightPart.Contains('(') && rightPart.Contains(')'))
@@ -386,9 +387,16 @@ namespace BenchmarkDotNet.Disassembler
 
             if (methodsWithSameToken.Length == 1) // the most common case
                 return methodsWithSameToken[0];
-            if (methodsWithSameToken.Length > 1 && methodReference.MetadataToken.ToUInt32() != default(UInt32)) 
+            if (methodsWithSameToken.Length > 1 && methodReference.MetadataToken.ToUInt32() != default(UInt32))
+            {
+                var compiled = methodsWithSameToken.Where(method => method.CompilationType != MethodCompilationType.None).ToArray();
+                
+                if (compiled.Length != 1) // very rare case where two different methods have the same metadata token ;)
+                    return compiled.Single(method => method.Name == methodReference.Name);;
+                
                 // usually one is NGened, the other one is not compiled (looks like a ClrMD bug to me)
-                return methodsWithSameToken.Single(method => method.CompilationType != MethodCompilationType.None);
+                return compiled[0];
+            }
 
             // comparing metadata tokens does not work correctly for some NGENed types like Random.Next, System.Threading.Monitor & more
             // Mono.Cecil reports different metadata token value than ClrMD for the same method 
@@ -448,7 +456,7 @@ namespace BenchmarkDotNet.Disassembler
                     return false;
 
                 // sometimes ClrMD reports same address range in two different ILToNativeMaps
-                // this happens usualy for prolog and the instruction after prolog
+                // this happens usually for prolog and the instruction after prolog
                 // and for the epilog and last instruction before epilog
                 if (x is Asm asmLeft && y is Asm asmRight)
                     return asmLeft.StartAddress == asmRight.StartAddress && asmLeft.EndAddress == asmRight.EndAddress;
@@ -482,7 +490,7 @@ namespace BenchmarkDotNet.Disassembler
             PrintIL = printIL;
             PrintSource = printSource;
             PrintPrologAndEpilog = printPrologAndEpilog;
-            RecursiveDepth = methodName == DisassemblerConstants.DiassemblerEntryMethodName && recursiveDepth != int.MaxValue ? recursiveDepth + 1 : recursiveDepth;
+            RecursiveDepth = methodName == DisassemblerConstants.DisassemblerEntryMethodName && recursiveDepth != int.MaxValue ? recursiveDepth + 1 : recursiveDepth;
             ResultsPath = resultsPath;
         }
 

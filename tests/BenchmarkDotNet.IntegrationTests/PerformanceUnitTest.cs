@@ -4,7 +4,6 @@ using System.Threading;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Extensions;
-using BenchmarkDotNet.Loggers;
 using BenchmarkDotNet.Reports;
 using BenchmarkDotNet.Running;
 using BenchmarkDotNet.Tests.Loggers;
@@ -45,7 +44,7 @@ namespace BenchmarkDotNet.IntegrationTests
                         string.Format("Expected SlowBenchmark: {0:N2} Ops to be LESS than FastBenchmark: {1:N2} Ops",
                                       slowBenchmarkRun.GetOpsPerSecond(), fastBenchmarkRun.GetOpsPerSecond()));
 
-            // Whilst we're at it, let's do more specific Asserts as we know what the elasped time should be
+            // Whilst we're at it, let's do more specific Asserts as we know what the elapsed time should be
             var slowBenchmarkReport = summary.GetReportFor<PerformanceUnitTest>(r => r.SlowBenchmark());
             var fastBenchmarkReport = summary.GetReportFor<PerformanceUnitTest>(r => r.FastBenchmark());
             foreach (var slowRun in slowBenchmarkReport.GetResultRuns())

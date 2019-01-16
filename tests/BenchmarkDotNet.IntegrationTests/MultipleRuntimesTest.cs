@@ -9,6 +9,7 @@ using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Portability;
 using BenchmarkDotNet.Running;
 using BenchmarkDotNet.Tests.Loggers;
+using BenchmarkDotNet.Tests.XUnit;
 using BenchmarkDotNet.Toolchains;
 using Xunit;
 using Xunit.Abstractions;
@@ -26,13 +27,13 @@ namespace BenchmarkDotNet.IntegrationTests
 
         [FactWindowsOnly("CLR is a valid job only on Windows")]
         [Trait(Constants.Category, Constants.BackwardCompatibilityCategory)]
-        public void SingleBenchmarkCanBeExecutedForMultpleRuntimes()
+        public void SingleBenchmarkCanBeExecutedForMultipleRuntimes()
         {
             var summary = BenchmarkRunner
                 .Run<C>(
                     ManualConfig.CreateEmpty()
-                                .With(new Job(Job.Dry, EnvMode.Core).With(Platform.X64))
-                                .With(new Job(Job.Dry, EnvMode.Clr))
+                                .With(new Job(Job.Dry, EnvironmentMode.Core).With(Platform.X64))
+                                .With(new Job(Job.Dry, EnvironmentMode.Clr))
                                 .With(DefaultColumnProviders.Instance)
                                 .With(new OutputLogger(output)));
 
@@ -43,12 +44,12 @@ namespace BenchmarkDotNet.IntegrationTests
             Assert.True(summary.Reports.All(report => report.AllMeasurements.Any()));
 
             Assert.True(summary.Reports
-                .Single(report => report.Benchmark.Job.Env.Runtime is ClrRuntime)
+                .Single(report => report.BenchmarkCase.Job.Environment.Runtime is ClrRuntime)
                 .ExecuteResults
                 .Any());
 
             Assert.True(summary.Reports
-                .Single(report => report.Benchmark.Job.Env.Runtime is CoreRuntime)
+                .Single(report => report.BenchmarkCase.Job.Environment.Runtime is CoreRuntime)
                 .ExecuteResults
                 .Any());
 

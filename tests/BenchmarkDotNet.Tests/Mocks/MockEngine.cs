@@ -22,6 +22,8 @@ namespace BenchmarkDotNet.Tests.Mocks
             this.measure = measure;
             TargetJob = job;
         }
+        
+        public void Dispose() => GlobalSetupAction?.Invoke();
 
         [UsedImplicitly]
         public IHost Host { get; }
@@ -38,8 +40,8 @@ namespace BenchmarkDotNet.Tests.Mocks
         [UsedImplicitly]
         public bool IsDiagnoserAttached { get; set; }
 
-        public Action<long> MainAction { get; } = _ => { };
-        public Action<long> IdleAction { get; } = _ => { };
+        public Action<long> WorkloadAction { get; } = _ => { };
+        public Action<long> OverheadAction { get; } = _ => { };
 
         [UsedImplicitly]
         public IEngineFactory Factory => null;
@@ -47,18 +49,16 @@ namespace BenchmarkDotNet.Tests.Mocks
         public Measurement RunIteration(IterationData data)
         {
             double nanoseconds = measure(data).Nanoseconds;
-            var measurement = new Measurement(1, data.IterationMode, data.Index, data.InvokeCount * OperationsPerInvoke, nanoseconds);
+            var measurement = new Measurement(1, data.IterationMode, data.IterationStage, data.Index, data.InvokeCount * OperationsPerInvoke, nanoseconds);
             WriteLine(measurement.ToOutputLine());
             return measurement;
         }
-
-        public void Jitting() { }
 
         public RunResults Run() => default;
 
         public void WriteLine() => output.WriteLine("");
         public void WriteLine(string line) => output.WriteLine(line);
 
-        public IResolver Resolver => new CompositeResolver(BenchmarkRunnerCore.DefaultResolver, EngineResolver.Instance);
+        public IResolver Resolver => new CompositeResolver(BenchmarkRunner.DefaultResolver, EngineResolver.Instance);
     }
 }

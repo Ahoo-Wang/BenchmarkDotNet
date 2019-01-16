@@ -1,5 +1,4 @@
-﻿#if CLASSIC || NETCOREAPP2_0
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Text;
 using ApprovalTests;
 using ApprovalTests.Namers;
@@ -24,7 +23,7 @@ namespace BenchmarkDotNet.Tests.Portability.Cpu
             foreach (var physicalCoreCount in new int?[] { null, 0, 1, 2 })
             foreach (var logicalCoreCount in new int?[] { null, 0, 1, 2 })
             {
-                var mockCpuInfo = new CpuInfo(processorName, physicalProcessorCount, physicalCoreCount, logicalCoreCount);
+                var mockCpuInfo = new CpuInfo(processorName, physicalProcessorCount, physicalCoreCount, logicalCoreCount, null, null, null);
                 captions.AppendLine(CpuInfoFormatter.Format(mockCpuInfo));
             }
 
@@ -32,4 +31,3 @@ namespace BenchmarkDotNet.Tests.Portability.Cpu
         }
     }
 }
-#endif

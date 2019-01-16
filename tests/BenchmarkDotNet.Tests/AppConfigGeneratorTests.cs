@@ -12,7 +12,7 @@ namespace BenchmarkDotNet.Tests
 {
     public class AppConfigGeneratorTests
     {
-        private static readonly IResolver Resolver = BenchmarkRunnerCore.DefaultResolver;
+        private static readonly IResolver Resolver = BenchmarkRunner.DefaultResolver;
 
         [Fact]
         public void GeneratesMinimalRequiredAppConfigForEmptySource()
@@ -50,7 +50,7 @@ namespace BenchmarkDotNet.Tests
         }
 
         [Fact]
-        public void RewritesCutomSettings()
+        public void RewritesCustomSettings()
         {
             const string customSettings =
                 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
@@ -72,7 +72,7 @@ namespace BenchmarkDotNet.Tests
         }
 
         [Fact]
-        public void RewritesCutomRuntimeSettings()
+        public void RewritesCustomRuntimeSettings()
         {
             const string customSettings =
                 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
@@ -114,7 +114,7 @@ namespace BenchmarkDotNet.Tests
             using (var source = new StringReader(customSettings))
             using (var destination = new Utf8StringWriter())
             {
-                AppConfigGenerator.Generate(new Job { Env = { Jit = jit } }.Freeze(), source, destination, Resolver);
+                AppConfigGenerator.Generate(new Job { Environment = { Jit = jit } }.Freeze(), source, destination, Resolver);
 
                 AssertAreEqualIgnoringWhitespacesAndCase(customSettingsAndJit, destination.ToString());
             }
@@ -138,7 +138,7 @@ namespace BenchmarkDotNet.Tests
             using (var source = new StringReader(input))
             using (var destination = new Utf8StringWriter())
             {
-                AppConfigGenerator.Generate(new Job { Env = { Runtime = new ClrRuntime(version: "4.0")} }.Freeze(), source, destination, Resolver);
+                AppConfigGenerator.Generate(new Job { Environment = { Runtime = new ClrRuntime(version: "4.0")} }.Freeze(), source, destination, Resolver);
 
                 AssertAreEqualIgnoringWhitespacesAndCase(withoutStartup, destination.ToString());
             }
@@ -163,14 +163,14 @@ namespace BenchmarkDotNet.Tests
             using (var source = new StringReader(input))
             using (var destination = new Utf8StringWriter())
             {
-                AppConfigGenerator.Generate(new Job { Env = { Runtime = new ClrRuntime() } }.Freeze(), source, destination, Resolver);
+                AppConfigGenerator.Generate(new Job { Environment = { Runtime = new ClrRuntime() } }.Freeze(), source, destination, Resolver);
 
                 AssertAreEqualIgnoringWhitespacesAndCase(withoutStartup, destination.ToString());
             }
         }
 
         [Fact]
-        public void RewritesCutomAssemblyBindingRedirects()
+        public void RewritesCustomAssemblyBindingRedirects()
         {
             const string settingsWithBindings =
                 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +

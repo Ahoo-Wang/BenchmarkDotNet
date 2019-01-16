@@ -32,13 +32,13 @@ namespace BenchmarkDotNet.Diagnostics.Windows
 
         public override IEnumerable<string> Ids => new[] { nameof(TailCallDiagnoser) };
 
-        protected override void AttachToEvents(TraceEventSession traceEventSession, Benchmark benchmark)
+        protected override void AttachToEvents(TraceEventSession traceEventSession, BenchmarkCase benchmarkCase)
         {
-            expectedNamespace = benchmark.Target.Method.DeclaringType.Namespace ?? benchmark.Target.Method.DeclaringType.FullName;
+            expectedNamespace = benchmarkCase.Descriptor.WorkloadMethod.DeclaringType.Namespace ?? benchmarkCase.Descriptor.WorkloadMethod.DeclaringType.FullName;
 
             Logger.WriteLine();
             Logger.WriteLineHeader(LogSeparator);
-            Logger.WriteLineInfo($"{benchmark.DisplayInfo}");
+            Logger.WriteLineInfo($"{benchmarkCase.DisplayInfo}");
             Logger.WriteLineHeader(LogSeparator);
 
             traceEventSession.Source.Clr.MethodTailCallSucceeded += jitData =>
@@ -56,6 +56,19 @@ namespace BenchmarkDotNet.Diagnostics.Windows
                 }
             };
             traceEventSession.Source.Clr.MethodTailCallFailed += jitData =>
+            {
+                if (ShouldPrintEventInfo(jitData.CallerNamespace, jitData.CalleeNamespace))
+                {
+                    if (StatsPerProcess.TryGetValue(jitData.ProcessID, out object ignored))
+                    {
+                        Logger.WriteLineHelp($"Caller: {jitData.CallerNamespace}.{jitData.CallerName} - {jitData.CallerNameSignature}");
+                        Logger.WriteLineHelp($"Callee: {jitData.CalleeNamespace}.{jitData.CalleeName} - {jitData.CalleeNameSignature}");
+                        Logger.WriteLineError($"Fail Reason: {jitData.FailReason}");
+                        Logger.WriteLineHeader(LogSeparator);
+                    }
+                }
+            };
+            traceEventSession.Source.Clr.MethodTailCallFailedAnsi += jitData => // this is new event exposed by .NET Core 2.2 https://github.com/dotnet/coreclr/commit/95a9055dbe5f6233f75ee2d7b6194e18cc4977fd
             {
                 if (ShouldPrintEventInfo(jitData.CallerNamespace, jitData.CalleeNamespace))
                 {

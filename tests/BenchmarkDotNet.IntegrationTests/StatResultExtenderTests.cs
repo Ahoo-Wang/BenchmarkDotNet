@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Threading;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Columns;
@@ -36,7 +35,7 @@ namespace BenchmarkDotNet.IntegrationTests
                 StatisticColumn.P95
             };
             var config = ManualConfig.CreateEmpty().With(CreateJob()).With(logger).With(columns);
-            var summary = CanExecute<Target>(config);
+            var summary = CanExecute<Benchmarks>(config);
 
             var table = summary.Table;
             var headerRow = table.FullHeader;
@@ -47,10 +46,10 @@ namespace BenchmarkDotNet.IntegrationTests
         private static Job CreateJob() =>
             new Job("MainJob", Job.Dry)
             {
-                Run = { TargetCount = 10, IterationTime = TimeInterval.Millisecond * 10 }
+                Run = { IterationCount = 10, IterationTime = TimeInterval.Millisecond * 10 }
             };
 
-        public class Target
+        public class Benchmarks
         {
             private readonly Random random = new Random(42);
 

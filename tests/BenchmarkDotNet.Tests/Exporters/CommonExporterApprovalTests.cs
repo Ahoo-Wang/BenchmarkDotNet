@@ -1,7 +1,7 @@
-﻿#if CLASSIC || NETCOREAPP2_0
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using ApprovalTests;
 using ApprovalTests.Namers;
@@ -15,6 +15,7 @@ using BenchmarkDotNet.Loggers;
 using BenchmarkDotNet.Tests.Mocks;
 using JetBrains.Annotations;
 using Xunit;
+
 namespace BenchmarkDotNet.Tests.Exporters
 {
     // In case of failed approval tests, use the following reporter:
@@ -31,26 +32,22 @@ namespace BenchmarkDotNet.Tests.Exporters
             initCulture = Thread.CurrentThread.CurrentCulture;
         }
 
-        [UsedImplicitly]
-        public static TheoryData<CultureInfo> GetCultureInfos()
+        private static readonly Dictionary<string, CultureInfo> CultureInfos = new Dictionary<string, CultureInfo>
         {
-            var cultures = new List<CultureInfo>
-            {
-                CultureInfo.InvariantCulture,
-                new CultureInfo("ru-RU"),
-                new CultureInfo("en-US")
-            };
+            { "", CultureInfo.InvariantCulture },
+            { "ru-RU", new CultureInfo("ru-RU") },
+            { "en-US", new CultureInfo("en-US") }
+        };
 
-            var theoryData = new TheoryData<CultureInfo>();
-            foreach (var cultureInfo in cultures)
-                theoryData.Add(cultureInfo);
-            return theoryData;
-        }
+        [UsedImplicitly]
+        public static TheoryData<string> CultureInfoNames => TheoryDataHelper.Create(CultureInfos.Keys);
 
         [Theory]
-        [MemberData(nameof(GetCultureInfos))]
-        public void Exporters(CultureInfo cultureInfo)
+        [MethodImpl(MethodImplOptions.NoInlining)] // required by the Approval test framework, do NOT remove
+        [MemberData(nameof(CultureInfoNames))]
+        public void Exporters(string cultureInfoName)
         {
+            var cultureInfo = CultureInfos[cultureInfoName];
             NamerFactory.AdditionalInformation = $"{GetName(cultureInfo)}";
             Thread.CurrentThread.CurrentCulture = cultureInfo;
 
@@ -112,4 +109,3 @@ namespace BenchmarkDotNet.Tests.Exporters
         }
     }
 }
-#endif

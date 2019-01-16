@@ -1,0 +1,34 @@
+<Project ToolsVersion="15.0">
+  <PropertyGroup>
+    <ImportDirectoryBuildProps>false</ImportDirectoryBuildProps>
+    <ImportDirectoryBuildTargets>false</ImportDirectoryBuildTargets>
+  </PropertyGroup>
+
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+
+  <PropertyGroup>
+    <AssemblyTitle>$PROGRAMNAME$</AssemblyTitle>
+    <TargetFramework>$TFM$</TargetFramework>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PlatformTarget>$PLATFORM$</PlatformTarget>
+    <AssemblyName>$PROGRAMNAME$</AssemblyName>
+    <OutputType>Exe</OutputType>
+    <OutputPath>bin\$CONFIGURATIONNAME$</OutputPath>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+    <DebugType>pdbonly</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <UseSharedCompilation>false</UseSharedCompilation>
+    $COPIEDSETTINGS$
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="$CODEFILENAME$" Exclude="bin\**;obj\**;**\*.xproj;packages\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$CSPROJPATH$" />
+  </ItemGroup>
+  $RUNTIMESETTINGS$
+
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+</Project>

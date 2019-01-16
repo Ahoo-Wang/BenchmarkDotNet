@@ -1,10 +1,5 @@
-﻿using BenchmarkDotNet.Jobs;
-using System;
-using System.Threading;
+﻿using System;
 using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Configs;
-using BenchmarkDotNet.Loggers;
-using BenchmarkDotNet.Running;
 using BenchmarkDotNet.Tests.Loggers;
 using Xunit;
 using Xunit.Abstractions;
@@ -27,10 +22,10 @@ namespace BenchmarkDotNet.IntegrationTests
             CanExecute<GlobalCleanupAttributeBenchmarks>(config);
 
             string log = logger.GetLog();
-            Assert.Contains(GlobalCleanupCalled + System.Environment.NewLine, log);
+            Assert.Contains(BenchmarkCalled + System.Environment.NewLine, log);
             Assert.True(
-                log.IndexOf(GlobalCleanupCalled + System.Environment.NewLine) >
-                log.IndexOf(BenchmarkCalled + System.Environment.NewLine));
+                log.IndexOf(BenchmarkCalled + System.Environment.NewLine) <
+                log.IndexOf(GlobalCleanupCalled + System.Environment.NewLine));
         }
 
         public class GlobalCleanupAttributeBenchmarks

@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using BenchmarkDotNet.Parameters;
 using BenchmarkDotNet.Running;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Analysers;
@@ -18,10 +17,10 @@ namespace BenchmarkDotNet.Diagnostics.Windows
     public abstract class EtwDiagnoser<TStats> where TStats : new()
     {
         internal readonly LogCapture Logger = new LogCapture();
-        protected readonly Dictionary<Benchmark, int> BenchmarkToProcess = new Dictionary<Benchmark, int>();
+        protected readonly Dictionary<BenchmarkCase, int> BenchmarkToProcess = new Dictionary<BenchmarkCase, int>();
         protected readonly ConcurrentDictionary<int, TStats> StatsPerProcess = new ConcurrentDictionary<int, TStats>();
 
-        public virtual RunMode GetRunMode(Benchmark benchmark) => RunMode.ExtraRun;
+        public virtual RunMode GetRunMode(BenchmarkCase benchmarkCase) => RunMode.ExtraRun;
 
         public virtual IEnumerable<IExporter> Exporters => Array.Empty<IExporter>();
         public virtual IEnumerable<IAnalyser> Analysers => Array.Empty<IAnalyser>();
@@ -36,14 +35,18 @@ namespace BenchmarkDotNet.Diagnostics.Windows
         {
             Clear();
 
-            BenchmarkToProcess.Add(parameters.Benchmark, parameters.Process.Id);
+            BenchmarkToProcess.Add(parameters.BenchmarkCase, parameters.Process.Id);
             StatsPerProcess.TryAdd(parameters.Process.Id, GetInitializedStats(parameters));
 
-            Session = CreateSession(parameters.Benchmark);
+            Session = CreateSession(parameters.BenchmarkCase);
+
+            Console.CancelKeyPress += OnConsoleCancelKeyPress;
+
+            NativeWindowsConsoleHelper.OnExit += OnConsoleCancelKeyPress;
 
             EnableProvider();
 
-            AttachToEvents(Session, parameters.Benchmark);
+            AttachToEvents(Session, parameters.BenchmarkCase);
 
             // The ETW collection thread starts receiving events immediately, but we only
             // start aggregating them after ProcessStarted is called and we know which process
@@ -59,8 +62,8 @@ namespace BenchmarkDotNet.Diagnostics.Windows
 
         protected virtual TStats GetInitializedStats(DiagnoserActionParameters parameters) => new TStats();
 
-        protected virtual TraceEventSession CreateSession(Benchmark benchmark)
-             => new TraceEventSession(GetSessionName(SessionNamePrefix, benchmark, benchmark.Parameters));
+        protected virtual TraceEventSession CreateSession(BenchmarkCase benchmarkCase)
+             => new TraceEventSession(GetSessionName(SessionNamePrefix, benchmarkCase, benchmarkCase.Parameters));
 
         protected virtual void EnableProvider()
         {
@@ -70,13 +73,16 @@ namespace BenchmarkDotNet.Diagnostics.Windows
                 EventType);
         }
 
-        protected abstract void AttachToEvents(TraceEventSession traceEventSession, Benchmark benchmark);
+        protected abstract void AttachToEvents(TraceEventSession traceEventSession, BenchmarkCase benchmarkCase);
 
         protected void Stop()
         {
             WaitForDelayedEvents();
 
             Session.Dispose();
+
+            Console.CancelKeyPress -= OnConsoleCancelKeyPress;
+            NativeWindowsConsoleHelper.OnExit -= OnConsoleCancelKeyPress;
         }
 
         private void Clear()
@@ -85,11 +91,13 @@ namespace BenchmarkDotNet.Diagnostics.Windows
             StatsPerProcess.Clear();
         }
 
-        private static string GetSessionName(string prefix, Benchmark benchmark, ParameterInstances parameters = null)
+        private void OnConsoleCancelKeyPress(object sender, ConsoleCancelEventArgs e) => Session?.Dispose();
+
+        private static string GetSessionName(string prefix, BenchmarkCase benchmarkCase, ParameterInstances parameters = null)
         {
             if (parameters != null && parameters.Items.Count > 0)
-                return $"{prefix}-{benchmark.FolderInfo}-{parameters.FolderInfo}";
-            return $"{prefix}-{benchmark.FolderInfo}";
+                return $"{prefix}-{benchmarkCase.FolderInfo}-{parameters.FolderInfo}";
+            return $"{prefix}-{benchmarkCase.FolderInfo}";
         }
 
         private static void WaitUntilStarted(Task task)

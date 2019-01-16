@@ -1,5 +1,4 @@
-﻿#if CLASSIC || NETCOREAPP2_0
-using System;
+﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
@@ -12,8 +11,6 @@ using BenchmarkDotNet.Exporters;
 using BenchmarkDotNet.Loggers;
 using BenchmarkDotNet.Tests.Mocks;
 using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Attributes.Columns;
-using BenchmarkDotNet.Attributes.Jobs;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Validators;
 using JetBrains.Annotations;
@@ -57,7 +54,7 @@ namespace BenchmarkDotNet.Tests.Exporters
             exporter.ExportToLog(summary, logger);
             
             var validator = BaselineValidator.FailOnError;
-            var errors = validator.Validate(new ValidationParameters(summary.Benchmarks, summary.Config)).ToList();
+            var errors = validator.Validate(new ValidationParameters(summary.BenchmarksCases, summary.Config)).ToList();
             logger.WriteLine();
             logger.WriteLine("Errors: " + errors.Count);
             foreach (var error in errors) 
@@ -73,9 +70,9 @@ namespace BenchmarkDotNet.Tests.Exporters
         {
             /* NoBaseline */
 
-            [RankColumn, LogicalGroupColumn, IsBaselineColumn]
+            [RankColumn, LogicalGroupColumn, BaselineColumn]
             [SimpleJob(id: "Job1"), SimpleJob(id: "Job2")]
-            public class NoBasline_MethodsParamsJobs
+            public class NoBaseline_MethodsParamsJobs
             {
                 [Params(2, 10), UsedImplicitly] public int Param;
 
@@ -84,10 +81,10 @@ namespace BenchmarkDotNet.Tests.Exporters
                 [Benchmark] public void Bar() { }
             }
 
-            [RankColumn, LogicalGroupColumn, IsBaselineColumn]
+            [RankColumn, LogicalGroupColumn, BaselineColumn]
             [SimpleJob(id: "Job1"), SimpleJob(id: "Job2")]
             [GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByMethod)]
-            public class NoBasline_MethodsParamsJobs_GroupByMethod
+            public class NoBaseline_MethodsParamsJobs_GroupByMethod
             {
                 [Params(2, 10), UsedImplicitly] public int Param;
 
@@ -96,10 +93,10 @@ namespace BenchmarkDotNet.Tests.Exporters
                 [Benchmark, BenchmarkCategory("CatB")] public void Bar() { }
             }
 
-            [RankColumn, LogicalGroupColumn, IsBaselineColumn]
+            [RankColumn, LogicalGroupColumn, BaselineColumn]
             [SimpleJob(id: "Job1"), SimpleJob(id: "Job2")]
             [GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByJob)]
-            public class NoBasline_MethodsParamsJobs_GroupByJob
+            public class NoBaseline_MethodsParamsJobs_GroupByJob
             {
                 [Params(2, 10), UsedImplicitly] public int Param;
 
@@ -108,10 +105,10 @@ namespace BenchmarkDotNet.Tests.Exporters
                 [Benchmark, BenchmarkCategory("CatB")] public void Bar() { }
             }
 
-            [RankColumn, LogicalGroupColumn, IsBaselineColumn]
+            [RankColumn, LogicalGroupColumn, BaselineColumn]
             [SimpleJob(id: "Job1"), SimpleJob(id: "Job2")]
             [GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByParams)]
-            public class NoBasline_MethodsParamsJobs_GroupByParams
+            public class NoBaseline_MethodsParamsJobs_GroupByParams
             {
                 [Params(2, 10), UsedImplicitly] public int Param;
 
@@ -120,10 +117,10 @@ namespace BenchmarkDotNet.Tests.Exporters
                 [Benchmark, BenchmarkCategory("CatB")] public void Bar() { }
             }
 
-            [RankColumn, LogicalGroupColumn, IsBaselineColumn]
+            [RankColumn, LogicalGroupColumn, BaselineColumn]
             [SimpleJob(id: "Job1"), SimpleJob(id: "Job2")]
             [GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory)]
-            public class NoBasline_MethodsParamsJobs_GroupByCategory
+            public class NoBaseline_MethodsParamsJobs_GroupByCategory
             {
                 [Params(2, 10), UsedImplicitly] public int Param;
 
@@ -138,14 +135,14 @@ namespace BenchmarkDotNet.Tests.Exporters
                 [Benchmark, BenchmarkCategory("CatB")] public void B2() { }
             }
 
-            [RankColumn, LogicalGroupColumn, IsBaselineColumn]
+            [RankColumn, LogicalGroupColumn, BaselineColumn]
             [SimpleJob(id: "Job1"), SimpleJob(id: "Job2")]
             [GroupBenchmarksBy(
                 BenchmarkLogicalGroupRule.ByMethod,
                 BenchmarkLogicalGroupRule.ByJob,
                 BenchmarkLogicalGroupRule.ByParams,
                 BenchmarkLogicalGroupRule.ByCategory)]
-            public class NoBasline_MethodsParamsJobs_GroupByAll
+            public class NoBaseline_MethodsParamsJobs_GroupByAll
             {
                 [Params(2, 10), UsedImplicitly] public int Param;
 
@@ -160,18 +157,18 @@ namespace BenchmarkDotNet.Tests.Exporters
                 [Benchmark, BenchmarkCategory("CatB")] public void B2() { }
             }
 
-            /* MethodBasline */
+            /* MethodBaseline */
 
-            [RankColumn, LogicalGroupColumn, IsBaselineColumn]
-            public class MethodBasline_Methods
+            [RankColumn, LogicalGroupColumn, BaselineColumn]
+            public class MethodBaseline_Methods
             {
                 [Benchmark(Baseline = true)] public void Base() { }
                 [Benchmark] public void Foo() { }
                 [Benchmark] public void Bar() { }
             }
 
-            [RankColumn, LogicalGroupColumn, IsBaselineColumn]
-            public class MethodBasline_MethodsParams
+            [RankColumn, LogicalGroupColumn, BaselineColumn]
+            public class MethodBaseline_MethodsParams
             {
                 [Params(2, 10), UsedImplicitly] public int Param;
 
@@ -180,18 +177,18 @@ namespace BenchmarkDotNet.Tests.Exporters
                 [Benchmark] public void Bar() { }
             }
 
-            [RankColumn, LogicalGroupColumn, IsBaselineColumn]
+            [RankColumn, LogicalGroupColumn, BaselineColumn]
             [SimpleJob(id: "Job1"), SimpleJob(id: "Job2")]
-            public class MethodBasline_MethodsJobs
+            public class MethodBaseline_MethodsJobs
             {
                 [Benchmark(Baseline = true)] public void Base() { }
                 [Benchmark] public void Foo() { }
                 [Benchmark] public void Bar() { }
             }
 
-            [RankColumn, LogicalGroupColumn, IsBaselineColumn]
+            [RankColumn, LogicalGroupColumn, BaselineColumn]
             [SimpleJob(id: "Job1"), SimpleJob(id: "Job2")]
-            public class MethodBasline_MethodsParamsJobs
+            public class MethodBaseline_MethodsParamsJobs
             {
                 [Params(2, 10), UsedImplicitly] public int Param;
 
@@ -202,18 +199,18 @@ namespace BenchmarkDotNet.Tests.Exporters
 
             /* JobBaseline */
 
-            [RankColumn, LogicalGroupColumn, IsBaselineColumn]
-            [SimpleJob(id: "Job1", isBaseline: true), SimpleJob(id: "Job2")]
-            public class JobBasline_MethodsJobs
+            [RankColumn, LogicalGroupColumn, BaselineColumn]
+            [SimpleJob(id: "Job1", baseline: true), SimpleJob(id: "Job2")]
+            public class JobBaseline_MethodsJobs
             {
                 [Benchmark] public void Base() { }
                 [Benchmark] public void Foo() { }
                 [Benchmark] public void Bar() { }
             }
 
-            [RankColumn, LogicalGroupColumn, IsBaselineColumn]
-            [SimpleJob(id: "Job1", isBaseline: true), SimpleJob(id: "Job2")]
-            public class JobBasline_MethodsParamsJobs
+            [RankColumn, LogicalGroupColumn, BaselineColumn]
+            [SimpleJob(id: "Job1", baseline: true), SimpleJob(id: "Job2")]
+            public class JobBaseline_MethodsParamsJobs
             {
                 [Params(2, 10), UsedImplicitly] public int Param;
 
@@ -222,31 +219,42 @@ namespace BenchmarkDotNet.Tests.Exporters
                 [Benchmark] public void Bar() { }
             }
             
+            /* MethodJobBaseline */
+            
+            [RankColumn, LogicalGroupColumn, BaselineColumn]
+            [SimpleJob(id: "Job1", baseline: true), SimpleJob(id: "Job2")]
+            public class MethodJobBaseline_MethodsJobs
+            {
+                [Benchmark(Baseline = true)] public void Foo() {}
+                [Benchmark] public void Bar() {}
+            }
+
+            [RankColumn, LogicalGroupColumn, BaselineColumn]
+            [SimpleJob(id: "Job1", baseline: true), SimpleJob(id: "Job2")]
+            public class MethodJobBaseline_MethodsJobsParams
+            {
+                [Params(2, 10), UsedImplicitly] public int Param;
+                
+                [Benchmark(Baseline = true)] public void Foo() {}
+                [Benchmark] public void Bar() {}
+            }
+            
             /* Invalid */
 
-            [RankColumn, LogicalGroupColumn, IsBaselineColumn]
+            [RankColumn, LogicalGroupColumn, BaselineColumn]
             public class Invalid_TwoMethodBaselines
             {
                 [Benchmark(Baseline = true)] public void Foo() {}
                 [Benchmark(Baseline = true)] public void Bar() {}
             }
 
-            [RankColumn, LogicalGroupColumn, IsBaselineColumn]
-            [SimpleJob(id: "Job1", isBaseline: true), SimpleJob(id: "Job2", isBaseline: true)]
+            [RankColumn, LogicalGroupColumn, BaselineColumn]
+            [SimpleJob(id: "Job1", baseline: true), SimpleJob(id: "Job2", baseline: true)]
             public class Invalid_TwoJobBaselines
             {
                 [Benchmark] public void Foo() {}
                 [Benchmark] public void Bar() {}
-            }
-            
-            [RankColumn, LogicalGroupColumn, IsBaselineColumn]
-            [SimpleJob(id: "Job1", isBaseline: true), SimpleJob(id: "Job2")]
-            public class Invalid_MethodAndJobBaselines
-            {
-                [Benchmark(Baseline = true)] public void Foo() {}
-                [Benchmark] public void Bar() {}
-            }
+            }                       
         }
     }
 }
-#endif

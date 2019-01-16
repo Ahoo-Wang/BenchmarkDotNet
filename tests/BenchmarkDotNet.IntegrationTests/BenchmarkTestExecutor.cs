@@ -5,7 +5,6 @@ using BenchmarkDotNet.Running;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Loggers;
-using BenchmarkDotNet.Order;
 using BenchmarkDotNet.Tests.Loggers;
 using Xunit;
 using Xunit.Abstractions;
@@ -34,7 +33,7 @@ namespace BenchmarkDotNet.IntegrationTests
         /// <param name="config">Optional custom config to be used instead of the default</param>
         /// <param name="fullValidation">Optional: disable validation (default = true/enabled)</param>
         /// <returns>The summary from the benchmark run</returns>
-        internal Reports.Summary CanExecute<TBenchmark>(IConfig config = null, bool fullValidation = true)
+        public Reports.Summary CanExecute<TBenchmark>(IConfig config = null, bool fullValidation = true)
         {
             return CanExecute(typeof(TBenchmark), config, fullValidation);
         }
@@ -71,11 +70,11 @@ namespace BenchmarkDotNet.IntegrationTests
 
                 Assert.True(summary.Reports.All(r => r.BuildResult.IsBuildSuccess),
                     "The following benchmarks are failed to build: " +
-                    string.Join(", ", summary.Reports.Where(r => !r.BuildResult.IsBuildSuccess).Select(r => r.Benchmark.DisplayInfo)));
+                    string.Join(", ", summary.Reports.Where(r => !r.BuildResult.IsBuildSuccess).Select(r => r.BenchmarkCase.DisplayInfo)));
 
                 Assert.True(summary.Reports.All(r => r.ExecuteResults != null),
                     "The following benchmarks don't have any execution results: " +
-                    string.Join(", ", summary.Reports.Where(r => r.ExecuteResults == null).Select(r => r.Benchmark.DisplayInfo)));
+                    string.Join(", ", summary.Reports.Where(r => r.ExecuteResults == null).Select(r => r.BenchmarkCase.DisplayInfo)));
                 
                 Assert.True(summary.Reports.All(r => r.ExecuteResults.Any(er => er.FoundExecutable && er.Data.Any())),
                     "All reports should have at least one \"ExecuteResult\" with \"FoundExecutable\" = true and at least one \"Data\" item");
@@ -92,7 +91,8 @@ namespace BenchmarkDotNet.IntegrationTests
             var baseConfig = job == null ? (IConfig)new SingleRunFastConfig() : new SingleJobConfig(job);
             return baseConfig
                 .With(logger ?? (Output != null ? new OutputLogger(Output) : ConsoleLogger.Default))
-                .With(DefaultColumnProviders.Instance);
+                .With(DefaultColumnProviders.Instance)
+                .With(DefaultConfig.Instance.GetAnalysers().ToArray());
         }
     }
 }

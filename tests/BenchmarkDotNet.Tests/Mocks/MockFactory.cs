@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Attributes.Jobs;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Engines;
-using BenchmarkDotNet.Horology;
 using BenchmarkDotNet.Reports;
 using BenchmarkDotNet.Running;
 using BenchmarkDotNet.Tests.Builders;
@@ -22,7 +20,7 @@ namespace BenchmarkDotNet.Tests.Mocks
             var runInfo = BenchmarkConverter.TypeToBenchmarks(benchmarkType);
             return new Summary(
                 "MockSummary",
-                runInfo.Benchmarks.Select((benchmark, index) => CreateReport(benchmark, 5, (index + 1) * 100)).ToList(),
+                runInfo.BenchmarksCases.Select((benchmark, index) => CreateReport(benchmark, 5, (index + 1) * 100)).ToList(),
                 new HostEnvironmentInfoBuilder().WithoutDotNetSdkVersion().Build(),
                 runInfo.Config,
                 "",
@@ -47,21 +45,21 @@ namespace BenchmarkDotNet.Tests.Mocks
             return CreateBenchmarks(config).Select(CreateSimpleReport).ToArray();
         }
 
-        private static Benchmark[] CreateBenchmarks(IConfig config)
+        private static BenchmarkCase[] CreateBenchmarks(IConfig config)
         {
-            return BenchmarkConverter.TypeToBenchmarks(typeof(MockBenchmarkClass), config).Benchmarks;
+            return BenchmarkConverter.TypeToBenchmarks(typeof(MockBenchmarkClass), config).BenchmarksCases;
         }
 
-        private static BenchmarkReport CreateSimpleReport(Benchmark benchmark) => CreateReport(benchmark, 1, 1);
+        private static BenchmarkReport CreateSimpleReport(BenchmarkCase benchmarkCase) => CreateReport(benchmarkCase, 1, 1);
 
-        private static BenchmarkReport CreateReport(Benchmark benchmark, int n, double nanoseconds)
+        private static BenchmarkReport CreateReport(BenchmarkCase benchmarkCase, int n, double nanoseconds)
         {
             var buildResult = BuildResult.Success(GenerateResult.Success(ArtifactsPaths.Empty, Array.Empty<string>()));
             var executeResult = new ExecuteResult(true, 0, Array.Empty<string>(), Array.Empty<string>());
             var measurements = Enumerable.Range(0, n)
-                .Select(index => new Measurement(1, IterationMode.Result, index + 1, 1, nanoseconds + index))
+                .Select(index => new Measurement(1, IterationMode.Workload, IterationStage.Result, index + 1, 1, nanoseconds + index))
                 .ToList();
-            return new BenchmarkReport(benchmark, buildResult, buildResult, new List<ExecuteResult> { executeResult }, measurements, default);
+            return new BenchmarkReport(true, benchmarkCase, buildResult, buildResult, new List<ExecuteResult> { executeResult }, measurements, default, Array.Empty<Metric>());
         }
 
         [LongRunJob]

@@ -3,8 +3,8 @@
   <PropertyGroup>
     <Description>Powerful .NET library for benchmarking (Diagnostic Tools for Windows)</Description>
     <AssemblyTitle>BenchmarkDotNet.Diagnostics.Windows</AssemblyTitle>
-    <TargetFramework>net46</TargetFramework>
-    <NoWarn>1701;1702;1705;1591;3001;3003;3002</NoWarn>
+    <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
+    <NoWarn>1701;1702;1705;1591;3001;3003;3002;3009</NoWarn>
     <AssemblyName>BenchmarkDotNet.Diagnostics.Windows</AssemblyName>
     <PackageId>BenchmarkDotNet.Diagnostics.Windows</PackageId>
   </PropertyGroup>
@@ -12,10 +12,6 @@
     <ProjectReference Include="..\BenchmarkDotNet\BenchmarkDotNet.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="1.0.41.0" />
-  </ItemGroup>
-  <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
-    <Reference Include="System" />
-    <Reference Include="Microsoft.CSharp" />
+    <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="2.0.26" PrivateAssets="contentfiles;analyzers" />
   </ItemGroup>
 </Project>

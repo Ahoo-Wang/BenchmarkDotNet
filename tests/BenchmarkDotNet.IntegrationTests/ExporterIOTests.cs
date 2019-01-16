@@ -1,12 +1,14 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using BenchmarkDotNet.Engines;
+using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Exporters;
-using BenchmarkDotNet.IntegrationTests.Xunit;
 using BenchmarkDotNet.Loggers;
+using BenchmarkDotNet.Portability;
 using BenchmarkDotNet.Reports;
 using BenchmarkDotNet.Running;
+using BenchmarkDotNet.Tests.Portability;
+using BenchmarkDotNet.Tests.XUnit;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -71,12 +73,12 @@ namespace BenchmarkDotNet.IntegrationTests
         }
 
         [Fact]
-        public void ExporterUsesSimpleTypeNameAsFileNameIfTypeNamesDoNotDuplicate()
+        public void ExporterUsesFullyQualifiedTypeNameAsFileName()
         {
             string resultsDirectoryPath = Path.GetTempPath();
             var exporter = new MockExporter();
-            var mockSummary = GetMockSummary(resultsDirectoryPath, typeof(ClassA));
-            var expectedFilePath = $"{Path.Combine(mockSummary.ResultsDirectoryPath, typeof(ClassA).Name)}-report.txt";
+            var mockSummary = GetMockSummary(resultsDirectoryPath, typeof(Generic<int>));
+            var expectedFilePath = $"{Path.Combine(mockSummary.ResultsDirectoryPath, "BenchmarkDotNet.IntegrationTests.Generic_Int32_")}-report.txt";
             string actualFilePath = null;
 
             try
@@ -142,19 +144,27 @@ namespace BenchmarkDotNet.IntegrationTests
             return CreateBenchmarks(types).Select(CreateReport).ToArray();
         }
 
-        private Benchmark[] CreateBenchmarks(Type[] types)
+        private BenchmarkCase[] CreateBenchmarks(Type[] types)
         {
-            return types.SelectMany(type => BenchmarkConverter.TypeToBenchmarks(type).Benchmarks).ToArray();
+            return types.SelectMany(type => BenchmarkConverter.TypeToBenchmarks(type).BenchmarksCases).ToArray();
         }
 
-        private BenchmarkReport CreateReport(Benchmark benchmark)
+        private BenchmarkReport CreateReport(BenchmarkCase benchmarkCase)
         {
-            return new BenchmarkReport(benchmark: benchmark,
+            return new BenchmarkReport(success: true,
+                                       benchmarkCase: benchmarkCase,
                                        generateResult: null,
                                        buildResult: null,
                                        executeResults: null,
                                        allMeasurements: null,
-                                       gcStats: default);
+                                       gcStats: default,
+                                       metrics: null);
         }
+    }
+
+    public class Generic<T>
+    {
+        [Benchmark]
+        public void Method() { }
     }
 }
